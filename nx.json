@@ -38,7 +38,10 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["apps/api-e2e/**/*", "storage-api-e2e/**/*"]
+      "exclude": ["apps/api-e2e/**/*", "storage-api-e2e/**/*", "**/jest.config.ts"]
     }
-  ]
+  ],
+  "nxCloud": { 
+    "authToken": "YzVkZmYwYzktNWExOC00ZTJmLTk3MjgtMTA0YzI2MTIyYzQ3"
+  }
 }

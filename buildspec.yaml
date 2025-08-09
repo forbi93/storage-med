@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm ci --legacy-peer-deps
+  pre_build:
+    commands:
+      - npm run lint
+      - npm run format:check
+      - npx nx test api -- --ci --coverage
+  build:
+    commands:
+      - npx nx run-many --target=build --all
+artifacts:
+  files:
+    - apps/api/**/dist/**
+cache:
+  paths:
+    - node_modules/**/* 
+    - ~/.npm/**/* 

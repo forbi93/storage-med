@@ -2,15 +2,17 @@ name: CI
 
 on:
   push:
-    branches:
-      - main        # Ajusta a tu rama principal
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 permissions:
   contents: read
-  id-token: write   # si usas OIDC para AWS
+  id-token: write    # si luego despliegas a AWS via OIDC
+
+env:
+  # Exponemos el secret como variable de entorno
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
 jobs:
   lint:
@@ -31,8 +33,8 @@ jobs:
         run: npx nx run-many --target=lint --all
 
   test:
-    runs-on: ubuntu-latest
     needs: lint
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -44,6 +46,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Record Nx Cloud run
+        run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - name: Run tests & collect coverage
         run: npx nx run-many --target=test --all -- --ci --coverage
@@ -51,14 +56,14 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}   # Define este secret
-          files: ./coverage/**/*.json
-          flags: unittests
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Finish Nx Cloud recording
+        run: npx nx-cloud record -- nx run-many --target=test --all
 
   build:
-    runs-on: ubuntu-latest
     needs: test
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -71,9 +76,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Record Nx Cloud run
+        run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
       - name: Build all projects
         run: npx nx run-many --target=build --all
 
-      - name: Fix CI (Nx)
-        run: npx nx fix-ci
-        if: always()
+      - name: Finish Nx Cloud recording
+        run: npx nx-cloud record -- nx run-many --target=build --all
