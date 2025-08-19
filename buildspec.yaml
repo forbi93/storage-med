@@ -1,9 +1,5 @@
 version: 0.2
 
-env:
-  variables:
-    CONTAINER_NAME: "api"   # Debe ser el "name" del contenedor en la Task Definition
-
 phases:
   install:
     runtime-versions:
@@ -14,12 +10,10 @@ phases:
 
   pre_build:
     commands:
-      # Ajusta tu repo ECR exacto (cópialo del proyecto/pipeline)
       - REPO_URI="810772959670.dkr.ecr.us-east-2.amazonaws.com/simple-docker-service-0699eddab4e7"
       - IMAGE_TAG=$(date +%Y%m%d%H%M%S)
       - echo "Repo=$REPO_URI | Tag=$IMAGE_TAG"
-      - aws ecr get-login-password --region us-east-2 \
-        | docker login --username AWS --password-stdin 810772959670.dkr.ecr.us-east-2.amazonaws.com
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 810772959670.dkr.ecr.us-east-2.amazonaws.com
 
   build:
     commands:
@@ -29,7 +23,7 @@ phases:
 
   post_build:
     commands:
-      - echo "Publicando imagen…"
+      - echo "Pushing a ECR…"
       - docker push "$REPO_URI:$IMAGE_TAG"
       - docker push "$REPO_URI:latest"
       - echo "IMAGEN=$REPO_URI:$IMAGE_TAG" > image-detail.txt
